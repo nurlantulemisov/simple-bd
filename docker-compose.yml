@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  app:
+    image: golang:1.13.5-alpine3.10
+    volumes:
+      - .:/test-checker
+    working_dir: /test-checker
