@@ -12,8 +12,8 @@ type Queue struct {
 }
 
 // Push add
-func (q *Queue) Push(token query.Token) {
-	q.dataQueue = append(q.dataQueue, &token)
+func (q *Queue) Push(token *query.Token) {
+	q.dataQueue = append(q.dataQueue, token)
 	q.QSize++
 	q.QStart = 0
 }

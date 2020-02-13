@@ -47,12 +47,9 @@ func WatchFile() {
 func setters(str string) {
 	var columns, _ = parsing(`(?m)(?:select)(.*?)(?:from)`, &str)
 	var queueType = new(queue.Queue)
+	var selectCommand = new(query.Select)
 
-	if len(columns) > 0 {
-		var selectCommand = new(query.Select)
-		selectCommand.Set(&columns)
-		queueType.Push(selectCommand)
-	}
+	createCommand(&str, queueType, selectCommand)
 
 	var tables, _ = parsing(`(?m)from(.*)(?:if|;)`, &str)
 
@@ -62,7 +59,7 @@ func setters(str string) {
 		queueType.Push(fromCommand)
 	}
 	for _, item := range queueType.GetAll() {
-		fmt.Println(item)
+		fmt.Println(*item)
 	}
 }
 
@@ -75,6 +72,18 @@ func parsing(rex string, str *string) (string, error) {
 		return columns[0][1], nil
 	}
 	return "", errors.New("not found element")
+}
+
+func createCommand(str *string, queueType *queue.Queue, command *query.Token) error {
+	var columns, err = parsing(`(?m)(?:select)(.*?)(?:from)`, str)
+
+	if err == nil && len(columns) > 0 {
+		command.Set(&columns)
+		queueType.Push(command)
+
+		return nil
+	}
+	return err
 }
 
 // // SetInsert set insert
