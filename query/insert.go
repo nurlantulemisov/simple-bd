@@ -1,26 +1,26 @@
 package query
 
 import (
-	"strings"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // Insert insert
 type Insert struct {
 	Columns []string
-	Values [] string
-	From *From
+	Values  []string
 }
 
 // WriteInsert Write to file
 func (i *Insert) WriteInsert() error {
-	var path string = "./data/" + i.From.tables[0]
-	
+	var path string = "./data/"
+
 	file, err := os.Create(path)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	var data string = ""
@@ -34,9 +34,21 @@ func (i *Insert) WriteInsert() error {
 	}
 	data += "\n"
 
-    _, err = io.WriteString(file, data)
-    if err != nil {
-        return err
-    }
-    return file.Sync()
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+	}
+	return file.Sync()
+}
+
+// Set insert
+func (i *Insert) Set(str string) {
+	i.Columns = strings.Split(str, ",")
+	i.Values = strings.Split(str, ",")
+}
+
+// Get insert
+func (i *Insert) Get() {
+	fmt.Println(i.Columns)
+	fmt.Println(i.Values)
 }

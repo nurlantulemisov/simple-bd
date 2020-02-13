@@ -9,7 +9,13 @@ type Select struct {
 	columns []string
 }
 
-// SetSelect set
-func (s *Select) SetSelect(str string) {
-	s.columns = strings.Split(str, ",")
+// Set set
+func (s *Select) Set(str *string) Token {
+	s.columns = strings.Split(*str, ",")
+	return s
+}
+
+// Get Select
+func (s *Select) Get() Token {
+	return s
 }
