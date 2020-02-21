@@ -3,12 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"query"
 	"queue"
 	reader "reader-console"
 	"regexp"
+	"strings"
 )
 
 func main() {
@@ -17,50 +20,67 @@ func main() {
 
 	str := <-messages
 
-	setters(str)
-	// q.Setters(str)
-	// q.Getters()
+	var queueType = new(queue.Queue)
+	setters(str, queueType)
 
-	// if len(q.Insert.Values) > 0 {
-	// 	q.Insert.From = &q.From
-	// 	err := q.Insert.WriteInsert()
+	for {
+		var command = queueType.Pop()
 
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// }
-}
+		if command != nil {
+			typeValue := *command
 
-// WatchFile watch file in dir
-func WatchFile() {
-	files, err := ioutil.ReadDir("./data")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, f := range files {
-		fmt.Println(f.Name())
+			switch typeValue.(type) {
+			case *query.Select:
+				fmt.Println("select")
+			case *query.From:
+				fmt.Println("from")
+			default:
+				fmt.Println("type unknown")
+			}
+		} else {
+			fmt.Println("Element isn't found")
+			break
+		}
 	}
 }
 
 // Setters set
-func setters(str string) {
-	var columns, _ = parsing(`(?m)(?:select)(.*?)(?:from)`, &str)
-	var queueType = new(queue.Queue)
+func setters(str string, queueType *queue.Queue) {
 	var selectCommand = new(query.Select)
 
-	createCommand(&str, queueType, selectCommand)
+	var err = createCommand(&str, `(?m)(?:select)(.*?)(?:from)`, queueType, selectCommand)
 
-	var tables, _ = parsing(`(?m)from(.*)(?:if|;)`, &str)
+	if err != nil {
+		var insertCommand = new(query.Insert)
+		var valueCommand = new(query.Value)
 
-	if len(tables) > 0 {
-		var fromCommand = new(query.From)
-		fromCommand.Set(&tables)
-		queueType.Push(fromCommand)
+		var errInsert = createCommand(&str, `(?m)(?:insert)(.*?)(?:value)`, queueType, insertCommand)
+		var errValueInsert = createCommand(&str, `(?m)(?:value)(.*?)(?:from)`, queueType, valueCommand)
+
+		if errInsert != nil || errValueInsert != nil {
+			panic(errors.New("You forget command"))
+		}
 	}
-	for _, item := range queueType.GetAll() {
-		fmt.Println(*item)
+
+	var fromCommand = new(query.From)
+
+	err = createCommand(&str, `(?m)from(.*)(?:if|;)`, queueType, fromCommand)
+
+	if err != nil {
+		panic(errors.New("You forget from command"))
 	}
+}
+
+func createCommand(str *string, rex string, queueType *queue.Queue, command query.Token) error {
+	var columns, err = parsing(rex, str)
+
+	if err == nil && len(columns) > 0 {
+		command.Set(&columns)
+		queueType.Push(&command)
+
+		return nil
+	}
+	return err
 }
 
 // Parsing parsing
@@ -74,29 +94,30 @@ func parsing(rex string, str *string) (string, error) {
 	return "", errors.New("not found element")
 }
 
-func createCommand(str *string, queueType *queue.Queue, command *query.Token) error {
-	var columns, err = parsing(`(?m)(?:select)(.*?)(?:from)`, str)
+//insert Write to file
+func write(i *query.Insert, v *query.Value) error {
+	var path string = "./data/"
 
-	if err == nil && len(columns) > 0 {
-		command.Set(&columns)
-		queueType.Push(command)
-
-		return nil
+	file, err := os.Create(path)
+	if err != nil {
+		return err
 	}
-	return err
+	defer file.Close()
+
+	var data string = ""
+	for _, column := range *i.GetColumns() {
+		data += strings.Trim(column, " ") + ";"
+	}
+
+	data += "\n"
+	for _, value := range *v.GetValues() {
+		data += strings.Trim(value, " ") + ";"
+	}
+	data += "\n"
+
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+	}
+	return file.Sync()
 }
-
-// // SetInsert set insert
-// func setInsert(str *string) {
-// 	var columnsInsert, errInsert = parsing(`(?m)(?:insert)(.*?)(?:value)`, *str)
-
-// 	if errInsert == nil {
-// 		q.Insert.Columns = strings.Split(columnsInsert, ",")
-
-// 		var values, errValue = parsing(`(?m)(?:value)(.*?)(?:from)`, *str)
-
-// 		if errValue == nil {
-// 			q.Insert.Values = strings.Split(values, ",")
-// 		}
-// 	}
-// }

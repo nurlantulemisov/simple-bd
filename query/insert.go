@@ -1,54 +1,47 @@
 package query
 
 import (
-	"fmt"
-	"io"
-	"os"
 	"strings"
 )
 
 // Insert insert
 type Insert struct {
-	Columns []string
-	Values  []string
-}
-
-// WriteInsert Write to file
-func (i *Insert) WriteInsert() error {
-	var path string = "./data/"
-
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	var data string = ""
-	for _, column := range i.Columns {
-		data += strings.Trim(column, " ") + ";"
-	}
-
-	data += "\n"
-	for _, value := range i.Values {
-		data += strings.Trim(value, " ") + ";"
-	}
-	data += "\n"
-
-	_, err = io.WriteString(file, data)
-	if err != nil {
-		return err
-	}
-	return file.Sync()
+	columns []string
 }
 
 // Set insert
-func (i *Insert) Set(str string) {
-	i.Columns = strings.Split(str, ",")
-	i.Values = strings.Split(str, ",")
+func (i *Insert) Set(str *string) Token {
+	i.columns = strings.Split(*str, ",")
+	return i
 }
 
-// Get insert
-func (i *Insert) Get() {
-	fmt.Println(i.Columns)
-	fmt.Println(i.Values)
+// Get insert model
+func (i *Insert) Get() Token {
+	return i
+}
+
+//GetColumns columns
+func (i *Insert) GetColumns() *[]string {
+	return &i.columns
+}
+
+// Value for values
+type Value struct {
+	values []string
+}
+
+//GetValues columns
+func (v *Value) GetValues() *[]string {
+	return &v.values
+}
+
+// Set value
+func (v *Value) Set(str *string) Token {
+	v.values = strings.Split(*str, ",")
+	return v
+}
+
+// Get value model
+func (v *Value) Get() Token {
+	return v
 }

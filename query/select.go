@@ -19,3 +19,5 @@ func (s *Select) Set(str *string) Token {
 func (s *Select) Get() Token {
 	return s
 }
+
+func (s *Select) foundColumns() {}

@@ -22,7 +22,12 @@ func (q *Queue) Push(token *query.Token) {
 func (q *Queue) Pop() *query.Token {
 	index := q.QStart
 	q.QStart++
-	return q.dataQueue[index]
+	if index <= int64(len(q.dataQueue)) {
+		elementRemove := q.dataQueue[index]
+		q.dataQueue = q.dataQueue[index:]
+		return elementRemove
+	}
+	return nil
 }
 
 // GetAll get all queue for debug
