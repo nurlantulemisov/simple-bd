@@ -15,8 +15,10 @@ const (
 	// Misc characters
 	ASTERISK // *
 	COMMA    // ,
+	EQUALL   // =
 
 	// Keywords
 	SELECT
 	FROM
+	INSERT
 )

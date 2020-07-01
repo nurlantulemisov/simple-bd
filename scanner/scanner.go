@@ -56,6 +56,8 @@ func (s *Scanner) Scan() (tok token.Token, lit string) {
 		return token.ASTERISK, string(ch)
 	case ',':
 		return token.COMMA, string(ch)
+	case '=':
+		return token.EQUALL, string(ch)
 	}
 
 	return token.ILLEGAL, string(ch)
@@ -93,7 +95,7 @@ func (s *Scanner) scanIdent() (tok token.Token, lit string) {
 	// Read every subsequent ident character into the buffer.
 	// Non-ident characters and EOF will cause the loop to exit.
 	for {
-		if ch := s.read(); ch == eof || utils.IsWhitespace(ch) || ch == ',' {
+		if ch := s.read(); ch == eof || utils.IsWhitespace(ch) || ch == ',' || ch == '=' {
 			s.unread()
 			break
 		} else if !utils.IsLetter(ch) && utils.IsDigit(ch) && ch != '_' {
@@ -110,6 +112,8 @@ func (s *Scanner) scanIdent() (tok token.Token, lit string) {
 		return token.SELECT, buf.String()
 	case "FROM":
 		return token.FROM, buf.String()
+	case "INSERT":
+		return token.INSERT, buf.String()
 	}
 
 	// Otherwise return as a regular identifier.
